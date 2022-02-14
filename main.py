@@ -72,7 +72,7 @@ async def auth(request: Request):
 )
 def get_common():
     print(user)
-    return {"Welcome msg": "Hello world"}
+    return {"Welcome msg": "Hello world", "user": user}
 
 @test_router.get(
     path = "/api/hello/{id}",
@@ -82,4 +82,4 @@ def get_common(id):
     if user == id:
         return {"Welcome msg": f"Hello world {id}"}
     else:
-        return {"Msg": "Access denied"}
+        return {"Msg": "Access denied", "user": user}
