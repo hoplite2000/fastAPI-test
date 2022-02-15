@@ -6,7 +6,7 @@ from authlib.integrations.starlette_client import OAuth
 from authlib.integrations.starlette_client import OAuth, OAuthError
 
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from starlette.middleware.sessions import SessionMiddleware
 
 test_router = FastAPI(
@@ -17,7 +17,7 @@ test_router = FastAPI(
 )
 
 test_router.add_middleware(SessionMiddleware, secret_key='!secret')
-user = None
+
 config = Config('.env')
 oauth = OAuth(config)
 
@@ -35,9 +35,7 @@ oauth.register(
     include_in_schema = False
 )
 async def homepage(request: Request):
-    global user
     user = request.session.get('user')
-    print(user)
     if not user:
         return RedirectResponse(url = "/login")
     return RedirectResponse(url="/api")
@@ -48,16 +46,13 @@ async def homepage(request: Request):
 )
 async def login(request: Request):
     redirect_uri = request.url_for('auth')
-    print(redirect_uri)
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 @test_router.route('/auth')
 async def auth(request: Request):
-    print(request)
     try:
         token = await oauth.google.authorize_access_token(request)
         parse_user = await oauth.google.parse_id_token(request, token)
-        print(parse_user)
     except OAuthError as error:
         print("error")
         return {"Msg": error}
@@ -71,14 +66,14 @@ async def auth(request: Request):
     tags = ["Test"]
 )
 def get_common():
-    print(user)
-    return {"Welcome msg": "Hello world", "user": user}
+    return {"Welcome msg": "Hello world"}
 
 @test_router.get(
     path = "/api/hello/{id}",
     tags = ["Test"]
 )
-def get_common(id):
+def get_common(id, request: Request):
+    user = request.session.get('user')
     if user == id:
         return {"Welcome msg": f"Hello world {id}"}
     else:
