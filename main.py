@@ -12,7 +12,7 @@ from starlette.middleware.sessions import SessionMiddleware
 test_router = FastAPI(
     title = "test",
     description = "test",
-    docs_url = "/api",
+    docs_url = "/v1/api",
     openapi_url = "/openapi.json"
 )
 
@@ -31,24 +31,24 @@ oauth.register(
 )
 
 @test_router.get(
-    path = "/",
+    path = "/v1",
     include_in_schema = False
 )
 async def homepage(request: Request):
     user = request.session.get('user')
     if not user:
-        return RedirectResponse(url = "/login")
-    return RedirectResponse(url="/api")
+        return RedirectResponse(url = "/v1/login")
+    return RedirectResponse(url="/v1/api")
 
 @test_router.get(
-    path = "/login",
+    path = "/v1/login",
     include_in_schema = False
 )
 async def login(request: Request):
     redirect_uri = request.url_for('auth')
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
-@test_router.route('/auth')
+@test_router.route('/v1/auth')
 async def auth(request: Request):
     try:
         token = await oauth.google.authorize_access_token(request)
@@ -59,17 +59,17 @@ async def auth(request: Request):
     user = parse_user.get('email')
     if user:
         request.session['user'] = user
-    return RedirectResponse(url='/api')
+    return RedirectResponse(url='/v1/api')
 
 @test_router.get(
-    path = "/api/hello",
+    path = "/vi/api/hello",
     tags = ["Test"]
 )
 def get_common():
     return {"Welcome msg": "Hello world"}
 
 @test_router.get(
-    path = "/api/hello/{id}",
+    path = "/v1/api/hello/{id}",
     tags = ["Test"]
 )
 def get_common(id, request: Request):
